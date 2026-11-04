@@ -1,0 +1,198 @@
+﻿<Window x:Class="PhysLab.Views.SpringWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="PhysLab - Spring-Mass System"
+        Height="750"
+        Width="1100"
+        MinHeight="650"
+        MinWidth="900"
+        WindowStartupLocation="CenterScreen"
+        Background="#F3F6FC">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Grid Margin="30">
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <StackPanel Margin="0,0,0,25">
+                <TextBlock Text="Spring-Mass System"
+                           FontSize="30"
+                           FontWeight="Bold"
+                           Foreground="#14243A"/>
+
+                <TextBlock Text="Explore simple harmonic motion through interactive simulation."
+                           FontSize="15"
+                           Foreground="#718096"
+                           Margin="0,8,0,0"/>
+            </StackPanel>
+
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="1.3*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Input Card -->
+                <Border Grid.Column="0"
+                        Background="White"
+                        CornerRadius="15"
+                        Padding="22"
+                        Margin="0,0,15,0">
+
+                    <StackPanel>
+                        <TextBlock Text="Experiment Parameters"
+                                   FontSize="20"
+                                   FontWeight="Bold"
+                                   Foreground="#14243A"
+                                   Margin="0,0,0,20"/>
+
+                        <TextBlock Text="Mass (kg)"
+                                   FontWeight="SemiBold"
+                                   Margin="0,0,0,8"/>
+
+                        <TextBox x:Name="MassTextBox"
+                                 Text="1"
+                                 FontSize="16"
+                                 Padding="10"
+                                 Margin="0,0,0,18"/>
+
+                        <TextBlock Text="Spring Constant (N/m)"
+                                   FontWeight="SemiBold"
+                                   Margin="0,0,0,8"/>
+
+                        <TextBox x:Name="SpringConstantTextBox"
+                                 Text="4"
+                                 FontSize="16"
+                                 Padding="10"
+                                 Margin="0,0,0,22"/>
+
+                        <Button Content="Calculate Results"
+                                Height="45"
+                                Background="#3478F6"
+                                Foreground="White"
+                                FontWeight="Bold"
+                                BorderThickness="0"
+                                Click="CalculateButton_Click"/>
+
+                        <TextBlock Text="Time Period"
+                                   Foreground="#718096"
+                                   Margin="0,25,0,5"/>
+
+                        <TextBlock x:Name="PeriodResultText"
+                                   Text="--"
+                                   FontSize="27"
+                                   FontWeight="Bold"
+                                   Foreground="#3478F6"/>
+
+                        <TextBlock Text="Seconds"
+                                   Foreground="#718096"/>
+
+                        <TextBlock Text="Angular Frequency"
+                                   Foreground="#718096"
+                                   Margin="0,18,0,5"/>
+
+                        <TextBlock x:Name="FrequencyResultText"
+                                   Text="--"
+                                   FontSize="27"
+                                   FontWeight="Bold"
+                                   Foreground="#3478F6"/>
+
+                        <TextBlock Text="rad/s"
+                                   Foreground="#718096"/>
+
+                        <!-- Save Button -->
+                        <Button Content="Save Result"
+                                Height="45"
+                                Margin="0,22,0,0"
+                                Background="#16A36A"
+                                Foreground="White"
+                                FontSize="15"
+                                FontWeight="Bold"
+                                BorderThickness="0"
+                                Click="SaveButton_Click"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Simulation Card -->
+                <Border Grid.Column="1"
+                        Background="White"
+                        CornerRadius="15"
+                        Padding="20">
+
+                    <StackPanel>
+                        <TextBlock Text="Spring Simulation"
+                                   FontSize="20"
+                                   FontWeight="Bold"
+                                   Foreground="#14243A"
+                                   Margin="0,0,0,15"/>
+
+                        <Border Background="#F3F6FC"
+                                CornerRadius="10"
+                                Height="330">
+
+                            <Canvas x:Name="SimulationCanvas"
+                                    ClipToBounds="True">
+
+                                <!-- Fixed Support -->
+                                <Rectangle Width="180"
+                                           Height="12"
+                                           Fill="#14243A"
+                                           Canvas.Left="125"
+                                           Canvas.Top="35"/>
+
+                                <!-- Spring -->
+                                <Polyline x:Name="SpringLine"
+                                          Stroke="#3478F6"
+                                          StrokeThickness="4"
+                                          Points="215,47 195,65 235,83 195,101 235,119 195,137 235,155 195,173 215,191"/>
+
+                                <!-- Mass -->
+                                <Rectangle x:Name="MassBlock"
+                                           Width="65"
+                                           Height="55"
+                                           RadiusX="6"
+                                           RadiusY="6"
+                                           Fill="#3478F6"
+                                           Canvas.Left="183"
+                                           Canvas.Top="185"/>
+
+                            </Canvas>
+                        </Border>
+
+                        <TextBlock Text="Vertical simple harmonic motion"
+                                   Foreground="#718096"
+                                   FontSize="13"
+                                   Margin="0,12,0,15"/>
+
+                        <StackPanel Orientation="Horizontal"
+                                    HorizontalAlignment="Center">
+
+                            <Button x:Name="StartButton"
+                                    Content="Start"
+                                    Width="110"
+                                    Height="42"
+                                    Background="#3478F6"
+                                    Foreground="White"
+                                    FontWeight="Bold"
+                                    BorderThickness="0"
+                                    Click="StartButton_Click"/>
+
+                            <Button Content="Reset"
+                                    Width="110"
+                                    Height="42"
+                                    Margin="12,0,0,0"
+                                    Background="#E2E8F0"
+                                    Foreground="#14243A"
+                                    FontWeight="Bold"
+                                    BorderThickness="0"
+                                    Click="ResetButton_Click"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Grid>
+    </ScrollViewer>
+</Window>
