@@ -150,10 +150,10 @@
                             ClipToBounds="True">
 
                         <Canvas x:Name="SimulationCanvas"
-                                Background="#F7F9FD">
+                                Background="#F7F9FD"
+                                SizeChanged="SimulationCanvas_SizeChanged">
 
-                            <Line X1="20" Y1="520"
-                                  X2="650" Y2="520"
+                            <Line x:Name="GroundLine"
                                   Stroke="#718096"
                                   StrokeThickness="2"/>
 
@@ -166,8 +166,9 @@
                                      Width="18"
                                      Height="18"
                                      Fill="#F59E0B"
-                                     Canvas.Left="42"
-                                     Canvas.Top="493"/>
+                                     Stroke="#D97706"
+                                     StrokeThickness="1"/>
+
                         </Canvas>
                     </Border>
 

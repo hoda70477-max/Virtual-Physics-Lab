@@ -7,14 +7,14 @@ using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Shapes;
 using System.Windows.Threading;
 
 namespace PhysLab.Views
 {
     public partial class ProjectileWindow : Window
     {
-        private DispatcherTimer animationTimer;
-
+        private readonly DispatcherTimer animationTimer = new();
         private readonly ExperimentStorageService storageService = new();
 
         private double initialVelocity;
@@ -30,9 +30,13 @@ namespace PhysLab.Views
         private double horizontalVelocity;
         private double verticalVelocity;
 
-        private const double Scale = 12;
-        private const double GroundY = 520;
-        private const double StartX = 42;
+        private double drawingScale = 1;
+        private double groundY = 0;
+        private double startX = 35;
+
+        private const double BottomMargin = 35;
+        private const double TopMargin = 35;
+        private const double SideMargin = 35;
 
         private bool hasCalculated = false;
         private bool isRunning = false;
@@ -41,16 +45,22 @@ namespace PhysLab.Views
         {
             InitializeComponent();
 
-            animationTimer = new DispatcherTimer();
-            animationTimer.Interval = TimeSpan.FromMilliseconds(16);
+            animationTimer.Interval =
+                TimeSpan.FromMilliseconds(16);
+
             animationTimer.Tick += AnimationTimer_Tick;
 
             Closed += (sender, e) => animationTimer.Stop();
 
-            ResetProjectile();
+            Loaded += (sender, e) =>
+            {
+                UpdateDrawingScale();
+                ResetProjectile();
+            };
         }
 
-        private void CalculateButton_Click(object sender, RoutedEventArgs e)
+        private void CalculateButton_Click(
+            object sender, RoutedEventArgs e)
         {
             bool validVelocity = double.TryParse(
                 VelocityTextBox.Text, out double velocity);
@@ -87,7 +97,8 @@ namespace PhysLab.Views
                 maximumHeight = experiment.MaximumHeight;
                 horizontalRange = experiment.Range;
 
-                double angleRadians = launchAngle * Math.PI / 180;
+                double angleRadians =
+                    launchAngle * Math.PI / 180;
 
                 horizontalVelocity =
                     initialVelocity * Math.Cos(angleRadians);
@@ -107,8 +118,10 @@ namespace PhysLab.Views
                 hasCalculated = true;
 
                 StopAnimation();
+
                 elapsedTime = 0;
 
+                UpdateDrawingScale();
                 DrawProjectilePath();
                 UpdateProjectilePosition(0);
             }
@@ -122,7 +135,204 @@ namespace PhysLab.Views
             }
         }
 
-        private void SaveButton_Click(object sender, RoutedEventArgs e)
+        private void SimulationCanvas_SizeChanged(
+            object sender, SizeChangedEventArgs e)
+        {
+            UpdateDrawingScale();
+
+            if (hasCalculated)
+            {
+                DrawProjectilePath();
+                UpdateProjectilePosition(elapsedTime);
+            }
+            else
+            {
+                ResetProjectile();
+            }
+        }
+
+        private void UpdateDrawingScale()
+        {
+            double canvasWidth = SimulationCanvas.ActualWidth;
+            double canvasHeight = SimulationCanvas.ActualHeight;
+
+            if (canvasWidth <= 0 || canvasHeight <= 0)
+                return;
+
+            startX = SideMargin;
+            groundY = canvasHeight - BottomMargin;
+
+            double availableWidth =
+                Math.Max(1, canvasWidth - (SideMargin * 2));
+
+            double availableHeight =
+                Math.Max(1, canvasHeight - TopMargin - BottomMargin);
+
+            double horizontalScale = horizontalRange > 0
+                ? availableWidth / horizontalRange
+                : double.MaxValue;
+
+            double verticalScale = maximumHeight > 0
+                ? availableHeight / maximumHeight
+                : double.MaxValue;
+
+            drawingScale = Math.Min(
+                horizontalScale,
+                verticalScale);
+
+            if (double.IsInfinity(drawingScale) ||
+                double.IsNaN(drawingScale) ||
+                drawingScale <= 0)
+            {
+                drawingScale = 1;
+            }
+
+            GroundLine.X1 = 10;
+            GroundLine.Y1 = groundY;
+            GroundLine.X2 = canvasWidth - 10;
+            GroundLine.Y2 = groundY;
+        }
+
+        private void DrawProjectilePath()
+        {
+            if (!hasCalculated)
+                return;
+
+            if (SimulationCanvas.ActualWidth <= 0 ||
+                SimulationCanvas.ActualHeight <= 0)
+                return;
+
+            PointCollection points = new();
+
+            const int steps = 150;
+
+            for (int i = 0; i <= steps; i++)
+            {
+                double time = flightTime * i / steps;
+
+                double x = horizontalVelocity * time;
+
+                double y = verticalVelocity * time -
+                           0.5 * gravity * time * time;
+
+                double canvasX = startX + x * drawingScale;
+                double canvasY = groundY - y * drawingScale;
+
+                points.Add(new Point(canvasX, canvasY));
+            }
+
+            ProjectilePath.Points = points;
+        }
+
+        private void UpdateProjectilePosition(double time)
+        {
+            double x = horizontalVelocity * time;
+
+            double y = verticalVelocity * time -
+                       0.5 * gravity * time * time;
+
+            double canvasX = startX + x * drawingScale;
+            double canvasY = groundY - y * drawingScale;
+
+            Canvas.SetLeft(
+                ProjectileBall,
+                canvasX - ProjectileBall.Width / 2);
+
+            Canvas.SetTop(
+                ProjectileBall,
+                canvasY - ProjectileBall.Height / 2);
+        }
+
+        private void StartButton_Click(
+            object sender, RoutedEventArgs e)
+        {
+            if (!hasCalculated)
+            {
+                MessageBox.Show(
+                    "Please calculate the results first.",
+                    "PhysLab",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+
+                return;
+            }
+
+            if (isRunning)
+            {
+                StopAnimation();
+                return;
+            }
+
+            if (elapsedTime >= flightTime)
+            {
+                elapsedTime = 0;
+                UpdateProjectilePosition(0);
+            }
+
+            isRunning = true;
+            StartButton.Content = "Pause";
+
+            animationTimer.Start();
+        }
+
+        private void AnimationTimer_Tick(
+            object? sender, EventArgs e)
+        {
+            elapsedTime += animationTimer.Interval.TotalSeconds;
+
+            if (elapsedTime >= flightTime)
+            {
+                elapsedTime = flightTime;
+
+                UpdateProjectilePosition(elapsedTime);
+
+                StopAnimation();
+                return;
+            }
+
+            UpdateProjectilePosition(elapsedTime);
+        }
+
+        private void ResetButton_Click(
+            object sender, RoutedEventArgs e)
+        {
+            StopAnimation();
+
+            elapsedTime = 0;
+
+            ProjectilePath.Points = new PointCollection();
+
+            hasCalculated = false;
+
+            FlightTimeResult.Text = "--";
+            HeightResult.Text = "--";
+            RangeResult.Text = "--";
+
+            ResetProjectile();
+        }
+
+        private void ResetProjectile()
+        {
+            Canvas.SetLeft(
+                ProjectileBall,
+                startX - ProjectileBall.Width / 2);
+
+            Canvas.SetTop(
+                ProjectileBall,
+                groundY - ProjectileBall.Height / 2);
+        }
+
+        private void StopAnimation()
+        {
+            animationTimer.Stop();
+
+            isRunning = false;
+
+            StartButton.Content = "Start";
+        }
+
+        private void SaveButton_Click(
+            object sender, RoutedEventArgs e)
         {
             if (!hasCalculated)
             {
@@ -137,7 +347,7 @@ namespace PhysLab.Views
 
             try
             {
-                SavedExperiment savedExperiment = new SavedExperiment
+                SavedExperiment savedExperiment = new()
                 {
                     ExperimentName = "Projectile Motion",
                     SavedAt = DateTime.Now,
@@ -187,124 +397,6 @@ namespace PhysLab.Views
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
             }
-        }
-
-        private void StartButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (!hasCalculated)
-            {
-                MessageBox.Show(
-                    "Please calculate the results first.",
-                    "PhysLab",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
-
-                return;
-            }
-
-            if (isRunning)
-            {
-                StopAnimation();
-                return;
-            }
-
-            if (elapsedTime >= flightTime)
-                elapsedTime = 0;
-
-            isRunning = true;
-            StartButton.Content = "Pause";
-
-            animationTimer.Start();
-        }
-
-        private void AnimationTimer_Tick(object? sender, EventArgs e)
-        {
-            elapsedTime += animationTimer.Interval.TotalSeconds;
-
-            if (elapsedTime >= flightTime)
-            {
-                elapsedTime = flightTime;
-
-                UpdateProjectilePosition(elapsedTime);
-
-                StopAnimation();
-                return;
-            }
-
-            UpdateProjectilePosition(elapsedTime);
-        }
-
-        private void UpdateProjectilePosition(double time)
-        {
-            double x = horizontalVelocity * time;
-
-            double y = verticalVelocity * time -
-                       0.5 * gravity * time * time;
-
-            double canvasX = StartX + x * Scale;
-            double canvasY = GroundY - y * Scale;
-
-            Canvas.SetLeft(
-                ProjectileBall,
-                canvasX - ProjectileBall.Width / 2);
-
-            Canvas.SetTop(
-                ProjectileBall,
-                canvasY - ProjectileBall.Height / 2);
-        }
-
-        private void DrawProjectilePath()
-        {
-            PointCollection points = new PointCollection();
-
-            int steps = 100;
-
-            for (int i = 0; i <= steps; i++)
-            {
-                double time = flightTime * i / steps;
-
-                double x = horizontalVelocity * time;
-
-                double y = verticalVelocity * time -
-                           0.5 * gravity * time * time;
-
-                double canvasX = StartX + x * Scale;
-                double canvasY = GroundY - y * Scale;
-
-                points.Add(new Point(canvasX, canvasY));
-            }
-
-            ProjectilePath.Points = points;
-        }
-
-        private void ResetButton_Click(object sender, RoutedEventArgs e)
-        {
-            StopAnimation();
-
-            elapsedTime = 0;
-
-            ProjectilePath.Points = new PointCollection();
-
-            ResetProjectile();
-        }
-
-        private void ResetProjectile()
-        {
-            Canvas.SetLeft(
-                ProjectileBall,
-                StartX - ProjectileBall.Width / 2);
-
-            Canvas.SetTop(
-                ProjectileBall,
-                GroundY - ProjectileBall.Height / 2);
-        }
-
-        private void StopAnimation()
-        {
-            animationTimer.Stop();
-
-            isRunning = false;
-            StartButton.Content = "Start";
         }
     }
 }

@@ -15,14 +15,13 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- Header -->
         <StackPanel Grid.Row="0" Margin="0,0,0,20">
             <TextBlock Text="Newton's Second Law"
                        FontSize="28"
                        FontWeight="Bold"
                        Foreground="#14243A"/>
 
-            <TextBlock Text="Explore the relationship between force, mass, and acceleration."
+            <TextBlock Text="Explore the relationship between force, mass, friction, and acceleration."
                        FontSize="14"
                        Foreground="#718096"
                        Margin="0,5,0,0"/>
@@ -76,6 +75,21 @@
                                  Text="0"
                                  Height="38"
                                  Padding="8"
+                                 Margin="0,7,0,15"/>
+
+                        <CheckBox x:Name="FrictionCheckBox"
+                                  Content="Enable Friction"
+                                  FontWeight="SemiBold"
+                                  Foreground="#14243A"
+                                  Margin="0,0,0,12"/>
+
+                        <TextBlock Text="Coefficient of Friction (μ)"
+                                   FontWeight="SemiBold"/>
+
+                        <TextBox x:Name="FrictionCoefficientTextBox"
+                                 Text="0.2"
+                                 Height="38"
+                                 Padding="8"
                                  Margin="0,7,0,20"/>
 
                         <Button Content="Calculate Results"
@@ -96,6 +110,26 @@
                                    Foreground="#718096"/>
 
                         <TextBlock x:Name="AccelerationResult"
+                                   Text="--"
+                                   FontSize="20"
+                                   FontWeight="Bold"
+                                   Foreground="#3478F6"
+                                   Margin="0,3,0,12"/>
+
+                        <TextBlock Text="Friction Force"
+                                   Foreground="#718096"/>
+
+                        <TextBlock x:Name="FrictionResult"
+                                   Text="--"
+                                   FontSize="20"
+                                   FontWeight="Bold"
+                                   Foreground="#DC5555"
+                                   Margin="0,3,0,12"/>
+
+                        <TextBlock Text="Net Force"
+                                   Foreground="#718096"/>
+
+                        <TextBlock x:Name="NetForceResult"
                                    Text="--"
                                    FontSize="20"
                                    FontWeight="Bold"
@@ -151,38 +185,60 @@
                             ClipToBounds="True">
 
                         <Canvas x:Name="SimulationCanvas"
-                                Background="#F7F9FD">
+                                Background="#F7F9FD"
+                                SizeChanged="SimulationCanvas_SizeChanged">
 
-                            <!-- Ground -->
-                            <Line X1="20" Y1="450"
-                                  X2="650" Y2="450"
+                            <Line x:Name="GroundLine"
                                   Stroke="#718096"
                                   StrokeThickness="2"/>
 
-                            <!-- Object -->
                             <Rectangle x:Name="MovingBlock"
                                        Width="65"
                                        Height="55"
                                        RadiusX="8"
                                        RadiusY="8"
                                        Fill="#3478F6"
-                                       Canvas.Left="45"
-                                       Canvas.Top="395"/>
+                                       Stroke="#245CC0"
+                                       StrokeThickness="1"/>
 
-                            <!-- Force Arrow -->
+                            <!-- Applied Force -->
                             <Line x:Name="ForceArrowLine"
-                                  X1="115" Y1="420"
-                                  X2="185" Y2="420"
                                   Stroke="#F59E0B"
-                                  StrokeThickness="4"/>
+                                  StrokeThickness="4"
+                                  StrokeStartLineCap="Round"
+                                  StrokeEndLineCap="Round"/>
 
                             <Polygon x:Name="ForceArrowHead"
-                                     Points="185,410 200,420 185,430"
                                      Fill="#F59E0B"/>
+
+                            <TextBlock x:Name="ForceLabel"
+                                       Text="Applied Force"
+                                       FontSize="12"
+                                       FontWeight="Bold"
+                                       Foreground="#D97706"/>
+
+                            <!-- Friction Force -->
+                            <Line x:Name="FrictionArrowLine"
+                                  Stroke="#DC5555"
+                                  StrokeThickness="4"
+                                  StrokeStartLineCap="Round"
+                                  StrokeEndLineCap="Round"
+                                  Visibility="Collapsed"/>
+
+                            <Polygon x:Name="FrictionArrowHead"
+                                     Fill="#DC5555"
+                                     Visibility="Collapsed"/>
+
+                            <TextBlock x:Name="FrictionLabel"
+                                       Text="Friction"
+                                       FontSize="12"
+                                       FontWeight="Bold"
+                                       Foreground="#DC5555"
+                                       Visibility="Collapsed"/>
+
                         </Canvas>
                     </Border>
 
-                    <!-- Start and Reset -->
                     <StackPanel Grid.Row="2"
                                 Orientation="Horizontal"
                                 HorizontalAlignment="Center"
@@ -208,7 +264,6 @@
                                 Click="ResetButton_Click"/>
                     </StackPanel>
 
-                    <!-- Save Result -->
                     <Button Grid.Row="3"
                             Content="Save Result"
                             Width="180"
